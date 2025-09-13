@@ -10,7 +10,6 @@ import {
   Switch,
 } from '@mui/material';
 import { Save, Preview } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
 
 const TemplateBuilder: React.FC = () => {
   const [templateData, setTemplateData] = useState({
@@ -20,8 +19,6 @@ const TemplateBuilder: React.FC = () => {
     maxScore: 100,
     passingScore: 70,
   });
-
-  const navigate = useNavigate();
 
   const handleSave = () => {
     // TODO: Implement template save functionality
