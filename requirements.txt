@@ -1,0 +1,17 @@
+# FreeAuditor Requirements
+# Minimal dependencies for basic functionality
+
+# For enhanced network auditing (optional)
+# psutil>=5.9.0
+
+# For advanced file analysis (optional)  
+# cryptography>=3.4.8
+
+# For web-based reports (optional)
+# flask>=2.0.0
+
+# Core Python libraries used:
+# - argparse (built-in)
+# - os (built-in) 
+# - sys (built-in)
+# - datetime (built-in)
