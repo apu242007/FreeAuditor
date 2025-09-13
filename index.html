@@ -324,6 +324,85 @@
             cursor: pointer;
         }
 
+        .dynamic-audit-section {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .dynamic-audit-section h4 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .audit-question {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .audit-question label {
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .audit-question.required label::after {
+            content: " *";
+            color: #dc3545;
+        }
+
+        .score-summary {
+            display: flex;
+            gap: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+
+        .score-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .score-item span:first-child {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .score-item span:last-child {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .repeatable-section {
+            border: 2px dashed #ccc;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .repeatable-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-instance-controls {
+            display: flex;
+            gap: 10px;
+        }
+
         @media (max-width: 768px) {
             .modal-content {
                 width: 95%;
@@ -332,6 +411,11 @@
             
             .modal-body {
                 padding: 20px;
+            }
+            
+            .score-summary {
+                flex-direction: column;
+                gap: 10px;
             }
         }
 
@@ -373,6 +457,16 @@
             <!-- Nueva Auditoría Tab -->
             <div id="audit" class="tab-content active">
                 <h2>Crear Nueva Auditoría</h2>
+                
+                <!-- Template Selection -->
+                <div class="form-group">
+                    <label for="templateSelect">Usar Plantilla (Opcional):</label>
+                    <select id="templateSelect" onchange="loadSelectedTemplate()">
+                        <option value="">Auditoría personalizada (sin plantilla)</option>
+                        <!-- Templates will be loaded here -->
+                    </select>
+                </div>
+
                 <form id="auditForm">
                     <div class="form-group">
                         <label for="auditType">Tipo de Auditoría:</label>
@@ -406,6 +500,9 @@
                         <input type="text" id="auditor" name="auditor" required>
                     </div>
 
+                    <!-- Dynamic audit form will be inserted here -->
+                    <div id="dynamicAuditForm"></div>
+
                     <button type="submit" class="btn">Iniciar Auditoría</button>
                 </form>
 
@@ -415,6 +512,25 @@
                         <div class="progress-fill" id="progressFill"></div>
                     </div>
                     <p id="progressText">Iniciando auditoría...</p>
+                    
+                    <!-- Real-time scoring display -->
+                    <div id="scoringDisplay" class="hidden">
+                        <h4>Puntuación Actual</h4>
+                        <div class="score-summary">
+                            <div class="score-item">
+                                <span>Puntos obtenidos: </span>
+                                <span id="currentScore">0</span>
+                            </div>
+                            <div class="score-item">
+                                <span>Puntos totales: </span>
+                                <span id="maxScore">0</span>
+                            </div>
+                            <div class="score-item">
+                                <span>Porcentaje: </span>
+                                <span id="scorePercentage">0%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -537,6 +653,327 @@
         let templates = JSON.parse(localStorage.getItem('templates') || '[]');
         let templateCounter = parseInt(localStorage.getItem('templateCounter') || '0');
         let currentEditingTemplate = null;
+        let currentAuditTemplate = null;
+        let currentAuditResponses = {};
+        let currentScore = 0;
+        let maxScore = 0;
+
+        // Funciones de auditoría dinámica
+        function loadTemplateSelector() {
+            const templateSelect = document.getElementById('templateSelect');
+            templateSelect.innerHTML = '<option value="">Auditoría personalizada (sin plantilla)</option>';
+            
+            templates.forEach(template => {
+                const option = document.createElement('option');
+                option.value = template.id;
+                option.textContent = `${template.name} (${getCategoryName(template.category)})`;
+                templateSelect.appendChild(option);
+            });
+        }
+
+        function loadSelectedTemplate() {
+            const templateSelect = document.getElementById('templateSelect');
+            const templateId = parseInt(templateSelect.value);
+            const dynamicForm = document.getElementById('dynamicAuditForm');
+            
+            if (!templateId) {
+                dynamicForm.innerHTML = '';
+                currentAuditTemplate = null;
+                return;
+            }
+            
+            const template = templates.find(t => t.id === templateId);
+            if (!template) return;
+            
+            currentAuditTemplate = template;
+            currentAuditResponses = {};
+            currentScore = 0;
+            maxScore = 0;
+            
+            // Update audit type to match template category
+            document.getElementById('auditType').value = template.category;
+            
+            generateDynamicAuditForm(template);
+        }
+
+        function generateDynamicAuditForm(template) {
+            const dynamicForm = document.getElementById('dynamicAuditForm');
+            dynamicForm.innerHTML = '<h3>Contenido de la Auditoría</h3>';
+            
+            template.sections.forEach((section, sectionIndex) => {
+                const sectionDiv = createAuditSection(section, sectionIndex);
+                dynamicForm.appendChild(sectionDiv);
+            });
+            
+            // Calculate total possible score
+            calculateMaxScore(template);
+        }
+
+        function createAuditSection(section, sectionIndex) {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'dynamic-audit-section';
+            sectionDiv.setAttribute('data-section-index', sectionIndex);
+            
+            let sectionHtml = `
+                <h4>${section.name}</h4>
+                <p>${section.description}</p>
+            `;
+            
+            if (section.repeatable) {
+                sectionHtml += `
+                    <div class="repeatable-section-controls">
+                        <button type="button" class="btn btn-secondary" onclick="addSectionInstance(${sectionIndex})">
+                            + Agregar ${section.name}
+                        </button>
+                    </div>
+                    <div class="section-instances" data-section-index="${sectionIndex}">
+                        <!-- Section instances will be added here -->
+                    </div>
+                `;
+                sectionDiv.innerHTML = sectionHtml;
+                
+                // Add first instance
+                setTimeout(() => addSectionInstance(sectionIndex), 100);
+            } else {
+                const questionsDiv = document.createElement('div');
+                questionsDiv.className = 'section-questions';
+                
+                section.questions.forEach((question, questionIndex) => {
+                    const questionDiv = createAuditQuestion(question, sectionIndex, questionIndex);
+                    questionsDiv.appendChild(questionDiv);
+                });
+                
+                sectionDiv.innerHTML = sectionHtml;
+                sectionDiv.appendChild(questionsDiv);
+            }
+            
+            return sectionDiv;
+        }
+
+        function addSectionInstance(sectionIndex) {
+            const section = currentAuditTemplate.sections[sectionIndex];
+            const instancesContainer = document.querySelector(`[data-section-index="${sectionIndex}"] .section-instances`);
+            
+            const instanceIndex = instancesContainer.children.length;
+            const instanceDiv = document.createElement('div');
+            instanceDiv.className = 'repeatable-section';
+            instanceDiv.setAttribute('data-instance-index', instanceIndex);
+            
+            instanceDiv.innerHTML = `
+                <div class="repeatable-section-header">
+                    <h5>${section.name} #${instanceIndex + 1}</h5>
+                    <div class="section-instance-controls">
+                        <button type="button" class="btn btn-danger" onclick="removeSectionInstance(${sectionIndex}, ${instanceIndex})">
+                            Eliminar
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            const questionsDiv = document.createElement('div');
+            questionsDiv.className = 'instance-questions';
+            
+            section.questions.forEach((question, questionIndex) => {
+                const questionDiv = createAuditQuestion(question, sectionIndex, questionIndex, instanceIndex);
+                questionsDiv.appendChild(questionDiv);
+            });
+            
+            instanceDiv.appendChild(questionsDiv);
+            instancesContainer.appendChild(instanceDiv);
+        }
+
+        function removeSectionInstance(sectionIndex, instanceIndex) {
+            const instanceDiv = document.querySelector(`[data-section-index="${sectionIndex}"] .section-instances [data-instance-index="${instanceIndex}"]`);
+            if (instanceDiv && confirm('¿Eliminar esta instancia de la sección?')) {
+                instanceDiv.remove();
+                // Recalculate scores
+                updateAuditScore();
+            }
+        }
+
+        function createAuditQuestion(question, sectionIndex, questionIndex, instanceIndex = null) {
+            const questionDiv = document.createElement('div');
+            questionDiv.className = `audit-question ${question.required ? 'required' : ''}`;
+            
+            const questionId = `q_${sectionIndex}_${questionIndex}${instanceIndex !== null ? '_' + instanceIndex : ''}`;
+            const questionName = `question_${sectionIndex}_${questionIndex}${instanceIndex !== null ? '_' + instanceIndex : ''}`;
+            
+            let questionHtml = `<label for="${questionId}">${question.text}</label>`;
+            
+            switch (question.type) {
+                case 'text':
+                    questionHtml += `<input type="text" id="${questionId}" name="${questionName}" ${question.required ? 'required' : ''}>`;
+                    break;
+                    
+                case 'number':
+                    const min = question.validation?.min || '';
+                    const max = question.validation?.max || '';
+                    questionHtml += `<input type="number" id="${questionId}" name="${questionName}" min="${min}" max="${max}" ${question.required ? 'required' : ''}>`;
+                    break;
+                    
+                case 'date':
+                    questionHtml += `<input type="date" id="${questionId}" name="${questionName}" ${question.required ? 'required' : ''}>`;
+                    break;
+                    
+                case 'select':
+                    questionHtml += `<select id="${questionId}" name="${questionName}" ${question.required ? 'required' : ''} onchange="updateQuestionScore('${questionId}', ${sectionIndex}, ${questionIndex}, ${instanceIndex})">`;
+                    questionHtml += '<option value="">Seleccionar...</option>';
+                    question.options.forEach(option => {
+                        questionHtml += `<option value="${option.text}" data-score="${option.score}">${option.text}</option>`;
+                    });
+                    questionHtml += '</select>';
+                    break;
+                    
+                case 'radio':
+                    question.options.forEach((option, optionIndex) => {
+                        questionHtml += `
+                            <label style="font-weight: normal; margin-bottom: 5px; display: flex; align-items: center;">
+                                <input type="radio" name="${questionName}" value="${option.text}" data-score="${option.score}" 
+                                       onchange="updateQuestionScore('${questionId}', ${sectionIndex}, ${questionIndex}, ${instanceIndex})" style="margin-right: 8px;">
+                                ${option.text}
+                            </label>
+                        `;
+                    });
+                    break;
+                    
+                case 'checkbox':
+                    question.options.forEach((option, optionIndex) => {
+                        const checkboxId = `${questionId}_${optionIndex}`;
+                        questionHtml += `
+                            <label style="font-weight: normal; margin-bottom: 5px; display: flex; align-items: center;">
+                                <input type="checkbox" id="${checkboxId}" name="${questionName}[]" value="${option.text}" data-score="${option.score}"
+                                       onchange="updateQuestionScore('${questionId}', ${sectionIndex}, ${questionIndex}, ${instanceIndex})" style="margin-right: 8px;">
+                                ${option.text}
+                            </label>
+                        `;
+                    });
+                    break;
+                    
+                case 'photo':
+                    questionHtml += `
+                        <input type="file" id="${questionId}" name="${questionName}" accept="image/*" capture="camera">
+                        <small>Tomar foto o subir imagen</small>
+                    `;
+                    break;
+            }
+            
+            if (question.scored) {
+                questionHtml += `
+                    <div class="question-scoring" style="margin-top: 10px; font-size: 0.9rem; color: #666;">
+                        <span>Puntuación máxima: ${question.scoring?.maxScore || 10}</span>
+                        <span id="score_${questionId}" style="margin-left: 15px; font-weight: bold;">Puntos: 0</span>
+                    </div>
+                `;
+            }
+            
+            questionDiv.innerHTML = questionHtml;
+            return questionDiv;
+        }
+
+        function updateQuestionScore(questionId, sectionIndex, questionIndex, instanceIndex) {
+            const question = currentAuditTemplate.sections[sectionIndex].questions[questionIndex];
+            if (!question.scored) return;
+            
+            let score = 0;
+            const responseKey = `${sectionIndex}_${questionIndex}${instanceIndex !== null ? '_' + instanceIndex : ''}`;
+            
+            if (question.type === 'select') {
+                const select = document.getElementById(questionId);
+                const selectedOption = select.selectedOptions[0];
+                if (selectedOption) {
+                    score = parseInt(selectedOption.getAttribute('data-score')) || 0;
+                    currentAuditResponses[responseKey] = {
+                        value: selectedOption.value,
+                        score: score
+                    };
+                }
+            } else if (question.type === 'radio') {
+                const radios = document.querySelectorAll(`input[name="${questionId.replace('q_', 'question_')}"]`);
+                radios.forEach(radio => {
+                    if (radio.checked) {
+                        score = parseInt(radio.getAttribute('data-score')) || 0;
+                        currentAuditResponses[responseKey] = {
+                            value: radio.value,
+                            score: score
+                        };
+                    }
+                });
+            } else if (question.type === 'checkbox') {
+                const checkboxes = document.querySelectorAll(`input[name="${questionId.replace('q_', 'question_')}[]"]`);
+                let values = [];
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        score += parseInt(checkbox.getAttribute('data-score')) || 0;
+                        values.push(checkbox.value);
+                    }
+                });
+                currentAuditResponses[responseKey] = {
+                    value: values,
+                    score: score
+                };
+            }
+            
+            // Update score display for this question
+            const scoreDisplay = document.getElementById(`score_${questionId}`);
+            if (scoreDisplay) {
+                scoreDisplay.textContent = `Puntos: ${score}`;
+            }
+            
+            // Update total score
+            updateAuditScore();
+        }
+
+        function updateAuditScore() {
+            currentScore = 0;
+            Object.values(currentAuditResponses).forEach(response => {
+                currentScore += response.score || 0;
+            });
+            
+            const scoreDisplay = document.getElementById('scoringDisplay');
+            if (scoreDisplay && currentAuditTemplate) {
+                document.getElementById('currentScore').textContent = currentScore;
+                document.getElementById('maxScore').textContent = maxScore;
+                document.getElementById('scorePercentage').textContent = maxScore > 0 ? Math.round((currentScore / maxScore) * 100) + '%' : '0%';
+                scoreDisplay.classList.remove('hidden');
+            }
+        }
+
+        function calculateMaxScore(template) {
+            maxScore = 0;
+            template.sections.forEach(section => {
+                section.questions.forEach(question => {
+                    if (question.scored) {
+                        if (question.type === 'checkbox') {
+                            // For checkboxes, sum all possible scores
+                            question.options.forEach(option => {
+                                maxScore += option.score || 0;
+                            });
+                        } else if (question.options) {
+                            // For select/radio, take the highest score
+                            const maxOptionScore = Math.max(...question.options.map(opt => opt.score || 0));
+                            maxScore += maxOptionScore;
+                        } else {
+                            // For other types, use the question's max score
+                            maxScore += question.scoring?.maxScore || 10;
+                        }
+                    }
+                });
+            });
+        }
+
+        function loadTemplateForAudit(template) {
+            // Switch to audit tab and load template
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById('audit').classList.add('active');
+            document.querySelectorAll('.nav-tab')[0].classList.add('active');
+            
+            setTimeout(() => {
+                loadTemplateSelector();
+                document.getElementById('templateSelect').value = template.id;
+                loadSelectedTemplate();
+            }, 100);
+        }
 
         // Funciones de gestión de plantillas
         function loadTemplates() {
@@ -960,6 +1397,8 @@
                 loadResults();
             } else if (tabName === 'templates') {
                 loadTemplates();
+            } else if (tabName === 'audit') {
+                loadTemplateSelector();
             }
         }
 
@@ -971,6 +1410,32 @@
 
         function startAudit() {
             const formData = new FormData(document.getElementById('auditForm'));
+            
+            // Collect dynamic form responses if using template
+            const dynamicResponses = {};
+            if (currentAuditTemplate) {
+                // Collect all form responses
+                const dynamicForm = document.getElementById('dynamicAuditForm');
+                const inputs = dynamicForm.querySelectorAll('input, select, textarea');
+                
+                inputs.forEach(input => {
+                    if (input.type === 'checkbox') {
+                        if (input.checked) {
+                            if (!dynamicResponses[input.name]) {
+                                dynamicResponses[input.name] = [];
+                            }
+                            dynamicResponses[input.name].push(input.value);
+                        }
+                    } else if (input.type === 'radio') {
+                        if (input.checked) {
+                            dynamicResponses[input.name] = input.value;
+                        }
+                    } else if (input.value) {
+                        dynamicResponses[input.name] = input.value;
+                    }
+                });
+            }
+            
             const auditData = {
                 id: ++auditCounter,
                 type: formData.get('auditType'),
@@ -981,15 +1446,27 @@
                 auditor: formData.get('auditor'),
                 status: 'En Progreso',
                 createdAt: new Date().toISOString(),
-                progress: 0
+                progress: 0,
+                templateId: currentAuditTemplate ? currentAuditTemplate.id : null,
+                templateName: currentAuditTemplate ? currentAuditTemplate.name : null,
+                responses: dynamicResponses,
+                auditResponses: currentAuditResponses,
+                score: currentScore,
+                maxScore: maxScore,
+                percentage: maxScore > 0 ? Math.round((currentScore / maxScore) * 100) : null
             };
 
             currentAudits.push(auditData);
             localStorage.setItem('audits', JSON.stringify(currentAudits));
             localStorage.setItem('auditCounter', auditCounter.toString());
 
-            // Mostrar progreso
+            // Show progress with scoring if template is used
             document.getElementById('auditProgress').classList.remove('hidden');
+            if (currentAuditTemplate) {
+                document.getElementById('scoringDisplay').classList.remove('hidden');
+                updateAuditScore();
+            }
+            
             simulateAuditProgress(auditData.id);
         }
 
@@ -1031,8 +1508,17 @@
                 currentAudits[auditIndex].progress = 100;
                 currentAudits[auditIndex].completedAt = new Date().toISOString();
                 
-                // Generar hallazgos de ejemplo
-                currentAudits[auditIndex].findings = generateSampleFindings();
+                // Generate findings based on template responses or default findings
+                if (currentAuditTemplate && currentAuditResponses) {
+                    currentAudits[auditIndex].findings = generateTemplateFindings();
+                } else {
+                    currentAudits[auditIndex].findings = generateSampleFindings();
+                }
+                
+                // Update final score
+                currentAudits[auditIndex].finalScore = currentScore;
+                currentAudits[auditIndex].finalMaxScore = maxScore;
+                currentAudits[auditIndex].finalPercentage = maxScore > 0 ? Math.round((currentScore / maxScore) * 100) : null;
                 
                 localStorage.setItem('audits', JSON.stringify(currentAudits));
             }
@@ -1041,9 +1527,64 @@
             
             setTimeout(() => {
                 document.getElementById('auditProgress').classList.add('hidden');
+                document.getElementById('scoringDisplay').classList.add('hidden');
                 document.getElementById('auditForm').reset();
+                document.getElementById('dynamicAuditForm').innerHTML = '';
+                document.getElementById('templateSelect').value = '';
+                currentAuditTemplate = null;
+                currentAuditResponses = {};
+                currentScore = 0;
+                maxScore = 0;
                 alert('¡Auditoría completada! Puedes ver los resultados en la pestaña "Resultados".');
             }, 2000);
+        }
+
+        function generateTemplateFindings() {
+            const findings = [];
+            
+            // Analyze responses to generate findings
+            currentAuditTemplate.sections.forEach((section, sectionIndex) => {
+                section.questions.forEach((question, questionIndex) => {
+                    const responseKey = `${sectionIndex}_${questionIndex}`;
+                    const response = currentAuditResponses[responseKey];
+                    
+                    if (response && question.scored) {
+                        const percentage = question.scoring?.maxScore ? (response.score / question.scoring.maxScore) * 100 : 0;
+                        
+                        let finding = {
+                            section: section.name,
+                            question: question.text,
+                            response: response.value,
+                            score: response.score,
+                            maxScore: question.scoring?.maxScore || 10
+                        };
+                        
+                        if (percentage >= 80) {
+                            finding.type = 'info';
+                            finding.title = 'Cumplimiento satisfactorio';
+                            finding.description = `${question.text}: ${response.value}`;
+                            finding.recommendation = 'Mantener las buenas prácticas identificadas.';
+                            finding.severity = 'Baja';
+                        } else if (percentage >= 50) {
+                            finding.type = 'warning';
+                            finding.title = 'Área de mejora identificada';
+                            finding.description = `${question.text}: ${response.value}`;
+                            finding.recommendation = 'Implementar medidas correctivas para mejorar el cumplimiento.';
+                            finding.severity = 'Media';
+                        } else {
+                            finding.type = 'error';
+                            finding.title = 'Incumplimiento crítico';
+                            finding.description = `${question.text}: ${response.value}`;
+                            finding.recommendation = 'Acción correctiva inmediata requerida.';
+                            finding.severity = 'Alta';
+                        }
+                        
+                        findings.push(finding);
+                    }
+                });
+            });
+            
+            return findings.length > 0 ? findings : generateSampleFindings();
         }
 
         function generateSampleFindings() {
@@ -1084,6 +1625,12 @@
 
             let html = '';
             currentAudits.forEach(audit => {
+                const scoreInfo = audit.finalPercentage !== null ? 
+                    `<p><strong>Puntuación:</strong> ${audit.finalScore}/${audit.finalMaxScore} (${audit.finalPercentage}%)</p>` : '';
+                
+                const templateInfo = audit.templateName ? 
+                    `<p><strong>Plantilla utilizada:</strong> ${audit.templateName}</p>` : '';
+                
                 html += `
                     <div class="audit-results">
                         <h3>${audit.company} - ${audit.type}</h3>
@@ -1091,6 +1638,8 @@
                         <p><strong>Auditor:</strong> ${audit.auditor}</p>
                         <p><strong>Período:</strong> ${audit.startDate} al ${audit.endDate}</p>
                         <p><strong>Fecha de creación:</strong> ${new Date(audit.createdAt).toLocaleDateString()}</p>
+                        ${templateInfo}
+                        ${scoreInfo}
                         
                         ${audit.findings ? renderFindings(audit.findings) : ''}
                         
@@ -1188,6 +1737,7 @@ Generado el: ${new Date().toLocaleString()}
             loadSettings();
             loadResults();
             loadTemplates();
+            loadTemplateSelector();
         });
     </script>
 </body>
