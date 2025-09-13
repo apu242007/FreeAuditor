@@ -1,0 +1,274 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  AUDITOR
+  VIEWER
+}
+
+enum QuestionType {
+  TEXT
+  NUMBER
+  SELECT_ONE
+  SELECT_MULTIPLE
+  CHECKBOX
+  DATE
+  TIME
+  DATETIME
+  PHOTO
+  VIDEO
+  SIGNATURE
+  LOCATION
+  SLIDER
+  FILE
+  ANNOTATION
+}
+
+enum InspectionStatus {
+  DRAFT
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+}
+
+enum ConditionOperator {
+  EQUALS
+  NOT_EQUALS
+  GREATER_THAN
+  LESS_THAN
+  CONTAINS
+  NOT_CONTAINS
+  IS_EMPTY
+  IS_NOT_EMPTY
+}
+
+enum ActionType {
+  SHOW_QUESTION
+  HIDE_QUESTION
+  SHOW_SECTION
+  HIDE_SECTION
+  REQUIRE_PHOTO
+  REQUIRE_SIGNATURE
+  SEND_NOTIFICATION
+  SET_SCORE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  firstName String
+  lastName  String
+  password  String
+  role      UserRole @default(AUDITOR)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  createdTemplates Template[]   @relation("TemplateCreator")
+  inspections      Inspection[]
+
+  @@map("users")
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  isActive    Boolean  @default(true)
+  isArchived  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Scoring configuration
+  scoringEnabled Boolean @default(true)
+  maxScore       Float?
+  passingScore   Float?
+
+  // Relations
+  creatorId   String
+  creator     User         @relation("TemplateCreator", fields: [creatorId], references: [id])
+  pages       Page[]
+  inspections Inspection[]
+
+  @@map("templates")
+}
+
+model Page {
+  id          String @id @default(cuid())
+  title       String
+  description String?
+  order       Int    @default(0)
+
+  // Relations
+  templateId String
+  template   Template  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  sections   Section[]
+
+  @@map("pages")
+}
+
+model Section {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  order       Int     @default(0)
+  isRepeatable Boolean @default(false)
+
+  // Relations
+  pageId    String
+  page      Page       @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  @@map("sections")
+}
+
+model Question {
+  id           String       @id @default(cuid())
+  text         String
+  helpText     String?
+  type         QuestionType
+  isRequired   Boolean      @default(false)
+  order        Int          @default(0)
+  defaultScore Float?
+
+  // Validation rules (stored as JSON)
+  validationRules Json?
+
+  // Relations
+  sectionId String
+  section   Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  options   Option[]
+  answers   Answer[]
+
+  // Conditional logic
+  conditions      Condition[] @relation("ConditionTrigger")
+  conditionTarget Condition[] @relation("ConditionTarget")
+
+  @@map("questions")
+}
+
+model Option {
+  id    String @id @default(cuid())
+  text  String
+  value String
+  score Float?
+  order Int    @default(0)
+
+  // Relations
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers    Answer[]
+
+  @@map("options")
+}
+
+model Condition {
+  id           String            @id @default(cuid())
+  operator     ConditionOperator
+  value        String
+  actionType   ActionType
+  actionConfig Json? // Additional configuration for the action
+
+  // Relations
+  triggerQuestionId String
+  triggerQuestion   Question @relation("ConditionTrigger", fields: [triggerQuestionId], references: [id], onDelete: Cascade)
+
+  targetQuestionId String?
+  targetQuestion   Question? @relation("ConditionTarget", fields: [targetQuestionId], references: [id], onDelete: Cascade)
+
+  @@map("conditions")
+}
+
+model Inspection {
+  id         String           @id @default(cuid())
+  title      String?
+  status     InspectionStatus @default(DRAFT)
+  score      Float?
+  maxScore   Float?
+  percentage Float?
+  startedAt  DateTime         @default(now())
+  completedAt DateTime?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  // Metadata (stored as JSON)
+  metadata Json?
+
+  // Relations
+  templateId String
+  template   Template @relation(fields: [templateId], references: [id])
+  
+  conductorId String
+  conductor   User     @relation(fields: [conductorId], references: [id])
+  
+  answers Answer[]
+  reports Report[]
+
+  @@map("inspections")
+}
+
+model Answer {
+  id        String   @id @default(cuid())
+  value     String? // Text, number, or JSON for complex values
+  score     Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // For repeatable sections
+  sectionInstance Int @default(0)
+
+  // Relations
+  inspectionId String
+  inspection   Inspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id])
+
+  optionId String?
+  option   Option? @relation(fields: [optionId], references: [id])
+
+  files File[]
+
+  @@map("answers")
+}
+
+model File {
+  id          String   @id @default(cuid())
+  originalName String
+  filename    String
+  path        String
+  mimeType    String
+  size        Int
+  createdAt   DateTime @default(now())
+
+  // Relations
+  answerId String?
+  answer   Answer? @relation(fields: [answerId], references: [id], onDelete: Cascade)
+
+  @@map("files")
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  title     String
+  format    String   @default("PDF") // PDF, HTML, etc.
+  filePath  String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  inspectionId String
+  inspection   Inspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+
+  @@map("reports")
+}
