@@ -191,6 +191,150 @@
             display: none;
         }
 
+        .modal.hidden {
+            display: none !important;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 5px;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .template-section {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .template-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .section-controls button {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .template-question {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .question-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .question-controls button {
+            padding: 2px 8px;
+            font-size: 0.7rem;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .modal-content {
+                width: 95%;
+                margin: 20px;
+            }
+            
+            .modal-body {
+                padding: 20px;
+            }
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
@@ -220,6 +364,7 @@
         <div class="main-content">
             <div class="nav-tabs">
                 <button class="nav-tab active" onclick="switchTab('audit')">Nueva Auditoría</button>
+                <button class="nav-tab" onclick="switchTab('templates')">Plantillas</button>
                 <button class="nav-tab" onclick="switchTab('results')">Resultados</button>
                 <button class="nav-tab" onclick="switchTab('reports')">Reportes</button>
                 <button class="nav-tab" onclick="switchTab('settings')">Configuración</button>
@@ -270,6 +415,65 @@
                         <div class="progress-fill" id="progressFill"></div>
                     </div>
                     <p id="progressText">Iniciando auditoría...</p>
+                </div>
+            </div>
+
+            <!-- Plantillas Tab -->
+            <div id="templates" class="tab-content">
+                <h2>Gestión de Plantillas</h2>
+                <div class="template-controls" style="margin-bottom: 20px;">
+                    <button class="btn" onclick="showTemplateBuilder()">+ Nueva Plantilla</button>
+                    <button class="btn btn-secondary" onclick="importTemplate()">Importar Plantilla</button>
+                </div>
+
+                <div id="templatesList">
+                    <div class="grid" id="templatesGrid">
+                        <!-- Templates will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Template Builder Modal -->
+                <div id="templateBuilderModal" class="modal hidden">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3 id="templateBuilderTitle">Nueva Plantilla</h3>
+                            <button class="close-btn" onclick="closeTemplateBuilder()">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-group">
+                                <label for="templateName">Nombre de la Plantilla:</label>
+                                <input type="text" id="templateName" placeholder="Ej: Auditoría de Seguridad Industrial">
+                            </div>
+                            <div class="form-group">
+                                <label for="templateCategory">Categoría:</label>
+                                <select id="templateCategory">
+                                    <option value="safety">Seguridad</option>
+                                    <option value="quality">Calidad</option>
+                                    <option value="environment">Medio Ambiente</option>
+                                    <option value="compliance">Cumplimiento</option>
+                                    <option value="operational">Operacional</option>
+                                    <option value="financial">Financiera</option>
+                                    <option value="it">Tecnología</option>
+                                    <option value="custom">Personalizada</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="templateDescription">Descripción:</label>
+                                <textarea id="templateDescription" rows="3" placeholder="Describe el propósito y alcance de esta plantilla..."></textarea>
+                            </div>
+
+                            <h4>Secciones de la Plantilla</h4>
+                            <div id="templateSections">
+                                <!-- Sections will be added here -->
+                            </div>
+                            <button class="btn btn-secondary" onclick="addTemplateSection()">+ Agregar Sección</button>
+
+                            <div class="modal-actions">
+                                <button class="btn" onclick="saveTemplate()">Guardar Plantilla</button>
+                                <button class="btn btn-secondary" onclick="closeTemplateBuilder()">Cancelar</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -330,6 +534,412 @@
         // Variables globales
         let currentAudits = JSON.parse(localStorage.getItem('audits') || '[]');
         let auditCounter = parseInt(localStorage.getItem('auditCounter') || '0');
+        let templates = JSON.parse(localStorage.getItem('templates') || '[]');
+        let templateCounter = parseInt(localStorage.getItem('templateCounter') || '0');
+        let currentEditingTemplate = null;
+
+        // Funciones de gestión de plantillas
+        function loadTemplates() {
+            const grid = document.getElementById('templatesGrid');
+            
+            if (templates.length === 0) {
+                grid.innerHTML = '<p>No hay plantillas creadas aún. <a href="#" onclick="showTemplateBuilder()">Crear primera plantilla</a></p>';
+                return;
+            }
+
+            let html = '';
+            templates.forEach(template => {
+                html += `
+                    <div class="card">
+                        <h3>${template.name}</h3>
+                        <p><strong>Categoría:</strong> ${getCategoryName(template.category)}</p>
+                        <p>${template.description}</p>
+                        <p><strong>Secciones:</strong> ${template.sections ? template.sections.length : 0}</p>
+                        <p><strong>Creada:</strong> ${new Date(template.createdAt).toLocaleDateString()}</p>
+                        <div style="margin-top: 15px;">
+                            <button class="btn btn-secondary" onclick="useTemplate(${template.id})" style="margin-right: 10px;">
+                                Usar Plantilla
+                            </button>
+                            <button class="btn btn-info" onclick="editTemplate(${template.id})" style="margin-right: 10px;">
+                                Editar
+                            </button>
+                            <button class="btn btn-danger" onclick="deleteTemplate(${template.id})">
+                                Eliminar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        function getCategoryName(category) {
+            const categories = {
+                'safety': 'Seguridad',
+                'quality': 'Calidad',
+                'environment': 'Medio Ambiente',
+                'compliance': 'Cumplimiento',
+                'operational': 'Operacional',
+                'financial': 'Financiera',
+                'it': 'Tecnología',
+                'custom': 'Personalizada'
+            };
+            return categories[category] || category;
+        }
+
+        function showTemplateBuilder() {
+            currentEditingTemplate = null;
+            document.getElementById('templateBuilderTitle').textContent = 'Nueva Plantilla';
+            document.getElementById('templateName').value = '';
+            document.getElementById('templateCategory').value = 'safety';
+            document.getElementById('templateDescription').value = '';
+            document.getElementById('templateSections').innerHTML = '';
+            document.getElementById('templateBuilderModal').classList.remove('hidden');
+            
+            // Add initial section
+            addTemplateSection();
+        }
+
+        function editTemplate(templateId) {
+            const template = templates.find(t => t.id === templateId);
+            if (!template) return;
+
+            currentEditingTemplate = template;
+            document.getElementById('templateBuilderTitle').textContent = 'Editar Plantilla';
+            document.getElementById('templateName').value = template.name;
+            document.getElementById('templateCategory').value = template.category;
+            document.getElementById('templateDescription').value = template.description;
+            
+            // Load sections
+            const sectionsContainer = document.getElementById('templateSections');
+            sectionsContainer.innerHTML = '';
+            
+            if (template.sections) {
+                template.sections.forEach(section => {
+                    addTemplateSection(section);
+                });
+            }
+            
+            document.getElementById('templateBuilderModal').classList.remove('hidden');
+        }
+
+        function closeTemplateBuilder() {
+            document.getElementById('templateBuilderModal').classList.add('hidden');
+            currentEditingTemplate = null;
+        }
+
+        function addTemplateSection(sectionData = null) {
+            const sectionsContainer = document.getElementById('templateSections');
+            const sectionId = Date.now();
+            
+            const sectionHtml = `
+                <div class="template-section" data-section-id="${sectionId}">
+                    <div class="template-section-header">
+                        <input type="text" placeholder="Nombre de la sección" class="section-name" value="${sectionData ? sectionData.name : ''}" style="font-weight: bold; font-size: 1.1rem;">
+                        <div class="section-controls">
+                            <button class="btn-info" onclick="addQuestion(${sectionId})">+ Pregunta</button>
+                            <button class="btn-danger" onclick="removeSection(${sectionId})">Eliminar Sección</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Descripción de la sección:</label>
+                        <textarea class="section-description" rows="2" placeholder="Describe qué evalúa esta sección...">${sectionData ? sectionData.description : ''}</textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" class="section-repeatable" ${sectionData && sectionData.repeatable ? 'checked' : ''}> 
+                            Sección repetible (para elementos múltiples)
+                        </label>
+                    </div>
+                    
+                    <h5>Preguntas:</h5>
+                    <div class="questions-container" data-section-id="${sectionId}">
+                        <!-- Questions will be added here -->
+                    </div>
+                </div>
+            `;
+            
+            sectionsContainer.insertAdjacentHTML('beforeend', sectionHtml);
+            
+            // Load questions if editing
+            if (sectionData && sectionData.questions) {
+                sectionData.questions.forEach(question => {
+                    addQuestion(sectionId, question);
+                });
+            }
+        }
+
+        function removeSection(sectionId) {
+            const section = document.querySelector(`[data-section-id="${sectionId}"]`);
+            if (section && confirm('¿Estás seguro de eliminar esta sección?')) {
+                section.remove();
+            }
+        }
+
+        function addQuestion(sectionId, questionData = null) {
+            const questionsContainer = document.querySelector(`.questions-container[data-section-id="${sectionId}"]`);
+            const questionId = Date.now() + Math.random();
+            
+            const questionHtml = `
+                <div class="template-question" data-question-id="${questionId}">
+                    <div class="question-header">
+                        <input type="text" placeholder="Texto de la pregunta" class="question-text" value="${questionData ? questionData.text : ''}" style="width: 70%;">
+                        <div class="question-controls">
+                            <select class="question-type" onchange="updateQuestionType(${questionId})">
+                                <option value="text" ${questionData && questionData.type === 'text' ? 'selected' : ''}>Texto</option>
+                                <option value="number" ${questionData && questionData.type === 'number' ? 'selected' : ''}>Número</option>
+                                <option value="select" ${questionData && questionData.type === 'select' ? 'selected' : ''}>Selección</option>
+                                <option value="checkbox" ${questionData && questionData.type === 'checkbox' ? 'selected' : ''}>Casillas</option>
+                                <option value="radio" ${questionData && questionData.type === 'radio' ? 'selected' : ''}>Opción única</option>
+                                <option value="date" ${questionData && questionData.type === 'date' ? 'selected' : ''}>Fecha</option>
+                                <option value="photo" ${questionData && questionData.type === 'photo' ? 'selected' : ''}>Foto</option>
+                            </select>
+                            <button class="btn-danger" onclick="removeQuestion(${questionId})">×</button>
+                        </div>
+                    </div>
+                    
+                    <div class="question-options">
+                        <label>
+                            <input type="checkbox" class="question-required" ${questionData && questionData.required ? 'checked' : ''}> 
+                            Obligatoria
+                        </label>
+                        <label style="margin-left: 15px;">
+                            <input type="checkbox" class="question-scored" onchange="toggleScoring(${questionId})" ${questionData && questionData.scored ? 'checked' : ''}> 
+                            Puntuable
+                        </label>
+                    </div>
+                    
+                    <div class="question-config" data-question-id="${questionId}">
+                        <!-- Configuration specific to question type will be added here -->
+                    </div>
+                </div>
+            `;
+            
+            questionsContainer.insertAdjacentHTML('beforeend', questionHtml);
+            updateQuestionType(questionId);
+            
+            // Load question data if editing
+            if (questionData) {
+                setTimeout(() => {
+                    if (questionData.options) {
+                        const optionsContainer = document.querySelector(`[data-question-id="${questionId}"] .options-list`);
+                        if (optionsContainer) {
+                            optionsContainer.innerHTML = '';
+                            questionData.options.forEach(option => {
+                                addQuestionOption(questionId, option.text, option.score);
+                            });
+                        }
+                    }
+                    if (questionData.scoring) {
+                        const maxScore = document.querySelector(`[data-question-id="${questionId}"] .max-score`);
+                        if (maxScore) maxScore.value = questionData.scoring.maxScore || '';
+                    }
+                }, 100);
+            }
+        }
+
+        function removeQuestion(questionId) {
+            const question = document.querySelector(`[data-question-id="${questionId}"]`);
+            if (question && confirm('¿Eliminar esta pregunta?')) {
+                question.remove();
+            }
+        }
+
+        function updateQuestionType(questionId) {
+            const questionDiv = document.querySelector(`[data-question-id="${questionId}"]`);
+            const type = questionDiv.querySelector('.question-type').value;
+            const configDiv = questionDiv.querySelector('.question-config');
+            
+            let configHtml = '';
+            
+            if (type === 'select' || type === 'radio' || type === 'checkbox') {
+                configHtml = `
+                    <div class="form-group">
+                        <label>Opciones:</label>
+                        <div class="options-list" data-question-id="${questionId}">
+                            <!-- Options will be added here -->
+                        </div>
+                        <button type="button" class="btn btn-secondary" onclick="addQuestionOption(${questionId})">+ Agregar Opción</button>
+                    </div>
+                `;
+            } else if (type === 'number') {
+                configHtml = `
+                    <div class="form-group">
+                        <label>Valor mínimo:</label>
+                        <input type="number" class="min-value" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor máximo:</label>
+                        <input type="number" class="max-value" placeholder="100">
+                    </div>
+                `;
+            }
+            
+            configDiv.innerHTML = configHtml;
+            
+            // Add default options for selection types
+            if (type === 'select' || type === 'radio' || type === 'checkbox') {
+                addQuestionOption(questionId, 'Sí', 10);
+                addQuestionOption(questionId, 'No', 0);
+            }
+        }
+
+        function addQuestionOption(questionId, text = '', score = 0) {
+            const optionsList = document.querySelector(`[data-question-id="${questionId}"] .options-list`);
+            const optionId = Date.now() + Math.random();
+            
+            const optionHtml = `
+                <div class="option-item" data-option-id="${optionId}" style="display: flex; gap: 10px; margin-bottom: 8px; align-items: center;">
+                    <input type="text" placeholder="Texto de la opción" value="${text}" style="flex: 1;">
+                    <input type="number" placeholder="Puntos" value="${score}" style="width: 80px;" class="option-score">
+                    <button type="button" class="btn-danger" onclick="removeOption(${optionId})" style="padding: 5px 10px;">×</button>
+                </div>
+            `;
+            
+            optionsList.insertAdjacentHTML('beforeend', optionHtml);
+        }
+
+        function removeOption(optionId) {
+            const option = document.querySelector(`[data-option-id="${optionId}"]`);
+            if (option) option.remove();
+        }
+
+        function toggleScoring(questionId) {
+            const questionDiv = document.querySelector(`[data-question-id="${questionId}"]`);
+            const scored = questionDiv.querySelector('.question-scored').checked;
+            const configDiv = questionDiv.querySelector('.question-config');
+            
+            if (scored) {
+                const scoringHtml = `
+                    <div class="scoring-config">
+                        <label>Puntuación máxima:</label>
+                        <input type="number" class="max-score" placeholder="10" value="10">
+                    </div>
+                `;
+                configDiv.insertAdjacentHTML('beforeend', scoringHtml);
+            } else {
+                const scoringConfig = configDiv.querySelector('.scoring-config');
+                if (scoringConfig) scoringConfig.remove();
+            }
+        }
+
+        function saveTemplate() {
+            const name = document.getElementById('templateName').value;
+            const category = document.getElementById('templateCategory').value;
+            const description = document.getElementById('templateDescription').value;
+            
+            if (!name.trim()) {
+                alert('Por favor ingresa un nombre para la plantilla');
+                return;
+            }
+            
+            // Collect sections data
+            const sections = [];
+            document.querySelectorAll('.template-section').forEach(sectionDiv => {
+                const sectionData = {
+                    name: sectionDiv.querySelector('.section-name').value,
+                    description: sectionDiv.querySelector('.section-description').value,
+                    repeatable: sectionDiv.querySelector('.section-repeatable').checked,
+                    questions: []
+                };
+                
+                // Collect questions for this section
+                sectionDiv.querySelectorAll('.template-question').forEach(questionDiv => {
+                    const questionData = {
+                        text: questionDiv.querySelector('.question-text').value,
+                        type: questionDiv.querySelector('.question-type').value,
+                        required: questionDiv.querySelector('.question-required').checked,
+                        scored: questionDiv.querySelector('.question-scored').checked
+                    };
+                    
+                    // Add type-specific configuration
+                    if (questionData.type === 'select' || questionData.type === 'radio' || questionData.type === 'checkbox') {
+                        questionData.options = [];
+                        questionDiv.querySelectorAll('.option-item').forEach(optionDiv => {
+                            questionData.options.push({
+                                text: optionDiv.querySelector('input[type="text"]').value,
+                                score: parseInt(optionDiv.querySelector('.option-score').value) || 0
+                            });
+                        });
+                    } else if (questionData.type === 'number') {
+                        const minValue = questionDiv.querySelector('.min-value');
+                        const maxValue = questionDiv.querySelector('.max-value');
+                        questionData.validation = {
+                            min: minValue ? parseInt(minValue.value) : undefined,
+                            max: maxValue ? parseInt(maxValue.value) : undefined
+                        };
+                    }
+                    
+                    if (questionData.scored) {
+                        const maxScore = questionDiv.querySelector('.max-score');
+                        questionData.scoring = {
+                            maxScore: maxScore ? parseInt(maxScore.value) : 10
+                        };
+                    }
+                    
+                    sectionData.questions.push(questionData);
+                });
+                
+                sections.push(sectionData);
+            });
+            
+            const templateData = {
+                id: currentEditingTemplate ? currentEditingTemplate.id : ++templateCounter,
+                name,
+                category,
+                description,
+                sections,
+                createdAt: currentEditingTemplate ? currentEditingTemplate.createdAt : new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            if (currentEditingTemplate) {
+                // Update existing template
+                const index = templates.findIndex(t => t.id === currentEditingTemplate.id);
+                templates[index] = templateData;
+            } else {
+                // Add new template
+                templates.push(templateData);
+            }
+            
+            localStorage.setItem('templates', JSON.stringify(templates));
+            localStorage.setItem('templateCounter', templateCounter.toString());
+            
+            closeTemplateBuilder();
+            loadTemplates();
+            alert(currentEditingTemplate ? 'Plantilla actualizada exitosamente' : 'Plantilla creada exitosamente');
+        }
+
+        function deleteTemplate(templateId) {
+            if (!confirm('¿Estás seguro de eliminar esta plantilla? Esta acción no se puede deshacer.')) {
+                return;
+            }
+            
+            templates = templates.filter(t => t.id !== templateId);
+            localStorage.setItem('templates', JSON.stringify(templates));
+            loadTemplates();
+        }
+
+        function useTemplate(templateId) {
+            const template = templates.find(t => t.id === templateId);
+            if (!template) return;
+            
+            // Switch to audit tab and load template
+            switchTab('audit');
+            loadTemplateForAudit(template);
+        }
+
+        function loadTemplateForAudit(template) {
+            // This will be implemented when we enhance the audit form
+            alert(`Cargando plantilla "${template.name}" para nueva auditoría.\nEsta funcionalidad se implementará en la siguiente actualización.`);
+        }
+
+        function importTemplate() {
+            alert('Funcionalidad de importación de plantillas estará disponible próximamente.');
+        }
 
         // Funciones de navegación
         function switchTab(tabName) {
@@ -348,6 +958,8 @@
             // Cargar contenido específico
             if (tabName === 'results') {
                 loadResults();
+            } else if (tabName === 'templates') {
+                loadTemplates();
             }
         }
 
@@ -575,6 +1187,7 @@ Generado el: ${new Date().toLocaleString()}
         document.addEventListener('DOMContentLoaded', function() {
             loadSettings();
             loadResults();
+            loadTemplates();
         });
     </script>
 </body>
