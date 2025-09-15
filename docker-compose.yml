@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: freeauditor_postgres
+    environment:
+      POSTGRES_DB: freeauditor
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - freeauditor_network
+
+  server:
+    build:
+      context: ./server
+      dockerfile: ../Dockerfile.server
+    container_name: freeauditor_server
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/freeauditor
+      JWT_SECRET: your-super-secret-jwt-key
+      FRONTEND_URL: http://localhost:5173
+      PORT: 3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      - postgres
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    networks:
+      - freeauditor_network
+    command: npm run start:dev
+
+  client:
+    build:
+      context: ./client
+      dockerfile: ../Dockerfile.client
+    container_name: freeauditor_client
+    environment:
+      VITE_API_URL: http://localhost:3001/api
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    networks:
+      - freeauditor_network
+    command: npm run dev
+
+volumes:
+  postgres_data:
+
+networks:
+  freeauditor_network:
+    driver: bridge

@@ -1,0 +1,29 @@
+# Dockerfile para el servidor (NestJS/TypeScript)
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Instalar OpenSSL para Prisma
+RUN apk add --no-cache openssl
+
+# Copiar archivos de dependencias
+COPY package*.json ./
+COPY prisma ./prisma/
+
+# Instalar dependencias
+RUN npm ci
+
+# Generar cliente de Prisma
+RUN npx prisma generate
+
+# Copiar código fuente
+COPY . .
+
+# Construir la aplicación
+RUN npm run build
+
+# Exponer puerto
+EXPOSE 3001
+
+# Comando por defecto
+CMD ["npm", "run", "start:prod"]

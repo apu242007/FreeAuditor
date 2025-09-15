@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id             String          @id @default(cuid())
+  email          String          @unique
+  nombre         String
+  passwordHash   String
+  fechaCreacion  DateTime        @default(now())
+  fechaActualiz  DateTime        @updatedAt
+  formularios    Formulario[]
+
+  @@map("usuarios")
+}
+
+model Formulario {
+  id                  String                @id @default(cuid())
+  titulo              String
+  descripcion         String?
+  activo              Boolean               @default(true)
+  fechaCreacion       DateTime              @default(now())
+  fechaActualizacion  DateTime              @updatedAt
+  autorId             String
+  autor               Usuario               @relation(fields: [autorId], references: [id], onDelete: Cascade)
+  secciones           Seccion[]
+  respuestasFormulario RespuestaFormulario[]
+
+  @@map("formularios")
+}
+
+model Seccion {
+  id           String     @id @default(cuid())
+  titulo       String
+  descripcion  String?
+  orden        Int
+  formularioId String
+  formulario   Formulario @relation(fields: [formularioId], references: [id], onDelete: Cascade)
+  preguntas    Pregunta[]
+
+  @@map("secciones")
+}
+
+model Pregunta {
+  id                String              @id @default(cuid())
+  tipo              TipoPregunta
+  texto             String
+  descripcion       String?
+  obligatoria       Boolean             @default(false)
+  orden             Int
+  seccionId         String
+  seccion           Seccion             @relation(fields: [seccionId], references: [id], onDelete: Cascade)
+  opciones          Opcion[]
+  respuestasPregunta RespuestaPregunta[]
+
+  @@map("preguntas")
+}
+
+model Opcion {
+  id         String   @id @default(cuid())
+  texto      String
+  valor      String
+  orden      Int
+  preguntaId String
+  pregunta   Pregunta @relation(fields: [preguntaId], references: [id], onDelete: Cascade)
+
+  @@map("opciones")
+}
+
+model RespuestaFormulario {
+  id           String              @id @default(cuid())
+  fechaEnvio   DateTime            @default(now())
+  formularioId String
+  formulario   Formulario          @relation(fields: [formularioId], references: [id], onDelete: Cascade)
+  respuestas   RespuestaPregunta[]
+
+  @@map("respuestas_formulario")
+}
+
+model RespuestaPregunta {
+  id                    String              @id @default(cuid())
+  valor                 String
+  respuestaFormularioId String
+  respuestaFormulario   RespuestaFormulario @relation(fields: [respuestaFormularioId], references: [id], onDelete: Cascade)
+  preguntaId            String
+  pregunta              Pregunta            @relation(fields: [preguntaId], references: [id], onDelete: Cascade)
+
+  @@map("respuestas_pregunta")
+}
+
+enum TipoPregunta {
+  TEXTO_CORTO
+  TEXTO_LARGO
+  SELECCION_UNICA
+  SELECCION_MULTIPLE
+  SI_NO
+  ESCALA
+  FECHA
+  HORA
+  EMAIL
+  NUMERO
+}
