@@ -16,6 +16,7 @@ El constructor ofrece una interfaz visual donde se arrastran los tipos de pregun
 Cada elemento puede configurarse en sitio: texto, opciones de respuesta, obligatoriedad y reglas de visibilidad.
 
 ### Tipos de campos disponibles
+
 - Texto corto o largo
 - Selección única y múltiple
 - Sí/No (toggle)
@@ -40,15 +41,15 @@ Cada elemento puede configurarse en sitio: texto, opciones de respuesta, obligat
 
 ## APIs principales
 
-| Método | Endpoint | Descripción |
-| ------ | -------- | ----------- |
-| GET    | `/formularios` | Listar formularios del usuario |
-| POST   | `/formularios` | Crear un formulario nuevo |
-| GET    | `/formularios/{id}` | Obtener estructura completa |
-| PUT    | `/formularios/{id}` | Actualizar título, secciones o preguntas |
-| DELETE | `/formularios/{id}` | Eliminar formulario |
+| Método | Endpoint                       | Descripción                                     |
+| ------ | ------------------------------ | ----------------------------------------------- |
+| GET    | `/formularios`                 | Listar formularios del usuario                  |
+| POST   | `/formularios`                 | Crear un formulario nuevo                       |
+| GET    | `/formularios/{id}`            | Obtener estructura completa                     |
+| PUT    | `/formularios/{id}`            | Actualizar título, secciones o preguntas        |
+| DELETE | `/formularios/{id}`            | Eliminar formulario                             |
 | POST   | `/formularios/{id}/respuestas` | Registrar respuestas de un formulario publicado |
-| GET    | `/formularios/{id}/respuestas` | Listar envíos recibidos |
+| GET    | `/formularios/{id}/respuestas` | Listar envíos recibidos                         |
 
 ## Flujo de uso
 
@@ -66,4 +67,4 @@ Cada elemento puede configurarse en sitio: texto, opciones de respuesta, obligat
 
 ---
 
-Este repositorio contiene actualmente solo un prototipo estático (`index.html`). Las siguientes etapas del proyecto consistirán en implementar el editor, la API y el modelo de datos descritos.
+Este repositorio contiene actualmente un prototipo estático (`index.html`) que permite agregar preguntas de texto, selección única y múltiple, además de eliminarlas. Las siguientes etapas del proyecto consistirán en implementar el editor, la API y el modelo de datos descritos.
