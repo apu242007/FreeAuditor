@@ -1,581 +1,119 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FreeAuditor - Herramienta de Auditoría Gratuita</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FreeAuditor - Constructor de Formularios</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        padding: 2rem;
+        background: #f7f7f7;
+        color: #333;
+      }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-        }
+      h1 {
+        text-align: center;
+        margin-bottom: 1rem;
+      }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+      .builder {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
 
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 30px;
-        }
+      .toolbox,
+      .preview {
+        flex: 1 1 300px;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1rem;
+      }
 
-        .header h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
+      .toolbox button {
+        display: block;
+        margin-bottom: 0.5rem;
+        width: 100%;
+        padding: 0.5rem;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
 
-        .header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
+      .form-group {
+        margin-bottom: 1rem;
+      }
 
-        .main-content {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-        }
-
-        .nav-tabs {
-            display: flex;
-            border-bottom: 2px solid #e0e0e0;
-            margin-bottom: 30px;
-        }
-
-        .nav-tab {
-            background: none;
-            border: none;
-            padding: 15px 25px;
-            cursor: pointer;
-            font-size: 1rem;
-            color: #666;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .nav-tab.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-        }
-
-        .nav-tab:hover {
-            background: #f5f5f5;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: transform 0.2s ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-        }
-
-        .audit-results {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border-left: 4px solid #667eea;
-        }
-
-        .result-item {
-            background: white;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            border-left: 4px solid #28a745;
-        }
-
-        .result-item.warning {
-            border-left-color: #ffc107;
-        }
-
-        .result-item.error {
-            border-left-color: #dc3545;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background: #e0e0e0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 20px 0;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border-left: 4px solid #667eea;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-            
-            .header h1 {
-                font-size: 2rem;
-            }
-            
-            .nav-tabs {
-                flex-direction: column;
-            }
-            
-            .nav-tab {
-                text-align: center;
-            }
-        }
+      label {
+        display: block;
+        margin-bottom: 0.25rem;
+      }
     </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🔍 FreeAuditor</h1>
-            <p>Herramienta de Auditoría Gratuita - Analiza y mejora tu negocio</p>
-        </div>
-
-        <div class="main-content">
-            <div class="nav-tabs">
-                <button class="nav-tab active" onclick="switchTab('audit')">Nueva Auditoría</button>
-                <button class="nav-tab" onclick="switchTab('results')">Resultados</button>
-                <button class="nav-tab" onclick="switchTab('reports')">Reportes</button>
-                <button class="nav-tab" onclick="switchTab('settings')">Configuración</button>
-            </div>
-
-            <!-- Nueva Auditoría Tab -->
-            <div id="audit" class="tab-content active">
-                <h2>Crear Nueva Auditoría</h2>
-                <form id="auditForm">
-                    <div class="form-group">
-                        <label for="auditType">Tipo de Auditoría:</label>
-                        <select id="auditType" name="auditType">
-                            <option value="financial">Auditoría Financiera</option>
-                            <option value="security">Auditoría de Seguridad</option>
-                            <option value="compliance">Auditoría de Cumplimiento</option>
-                            <option value="operational">Auditoría Operacional</option>
-                            <option value="it">Auditoría de TI</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="companyName">Nombre de la Empresa:</label>
-                        <input type="text" id="companyName" name="companyName" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="auditPeriod">Período de Auditoría:</label>
-                        <input type="date" id="auditStartDate" name="auditStartDate" style="width: 48%; margin-right: 4%;" required>
-                        <input type="date" id="auditEndDate" name="auditEndDate" style="width: 48%;" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="auditScope">Alcance de la Auditoría:</label>
-                        <textarea id="auditScope" name="auditScope" rows="4" placeholder="Describe el alcance y objetivos de la auditoría..."></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="auditor">Auditor Responsable:</label>
-                        <input type="text" id="auditor" name="auditor" required>
-                    </div>
-
-                    <button type="submit" class="btn">Iniciar Auditoría</button>
-                </form>
-
-                <div id="auditProgress" class="hidden">
-                    <h3>Progreso de la Auditoría</h3>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    <p id="progressText">Iniciando auditoría...</p>
-                </div>
-            </div>
-
-            <!-- Resultados Tab -->
-            <div id="results" class="tab-content">
-                <h2>Resultados de Auditorías</h2>
-                <div id="resultsContainer">
-                    <p>No hay auditorías completadas aún.</p>
-                </div>
-            </div>
-
-            <!-- Reportes Tab -->
-            <div id="reports" class="tab-content">
-                <h2>Generar Reportes</h2>
-                <div class="grid">
-                    <div class="card">
-                        <h3>Reporte Ejecutivo</h3>
-                        <p>Resumen de hallazgos principales y recomendaciones.</p>
-                        <button class="btn" onclick="generateReport('executive')">Generar</button>
-                    </div>
-                    <div class="card">
-                        <h3>Reporte Detallado</h3>
-                        <p>Análisis completo con todos los hallazgos y evidencias.</p>
-                        <button class="btn" onclick="generateReport('detailed')">Generar</button>
-                    </div>
-                    <div class="card">
-                        <h3>Reporte de Cumplimiento</h3>
-                        <p>Estado de cumplimiento de normativas y regulaciones.</p>
-                        <button class="btn" onclick="generateReport('compliance')">Generar</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Configuración Tab -->
-            <div id="settings" class="tab-content">
-                <h2>Configuración</h2>
-                <div class="form-group">
-                    <label for="language">Idioma:</label>
-                    <select id="language">
-                        <option value="es">Español</option>
-                        <option value="en">English</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="defaultAuditor">Auditor por Defecto:</label>
-                    <input type="text" id="defaultAuditor" placeholder="Nombre del auditor por defecto">
-                </div>
-                <div class="form-group">
-                    <label for="companyInfo">Información de la Empresa:</label>
-                    <textarea id="companyInfo" rows="3" placeholder="Información general de tu empresa..."></textarea>
-                </div>
-                <button class="btn" onclick="saveSettings()">Guardar Configuración</button>
-            </div>
-        </div>
+  </head>
+  <body>
+    <h1>FreeAuditor</h1>
+    <p style="text-align: center">Constructor de formularios en desarrollo.</p>
+    <div class="builder">
+      <div class="toolbox">
+        <h2>Componentes</h2>
+        <button id="add-text">Texto</button>
+        <button id="add-single">Selección única</button>
+      </div>
+      <div class="preview">
+        <h2>Vista previa</h2>
+        <form id="form"></form>
+      </div>
     </div>
-
     <script>
-        // Variables globales
-        let currentAudits = JSON.parse(localStorage.getItem('audits') || '[]');
-        let auditCounter = parseInt(localStorage.getItem('auditCounter') || '0');
+      const formContainer = document.getElementById("form");
+      let questionCount = 0;
 
-        // Funciones de navegación
-        function switchTab(tabName) {
-            // Ocultar todas las pestañas
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
+      function addTextQuestion() {
+        questionCount += 1;
+        const wrapper = document.createElement("div");
+        wrapper.className = "form-group";
+        const label = document.createElement("label");
+        label.textContent = `Pregunta ${questionCount}`;
+        const input = document.createElement("input");
+        input.type = "text";
+        wrapper.appendChild(label);
+        wrapper.appendChild(input);
+        formContainer.appendChild(wrapper);
+      }
 
-            // Mostrar la pestaña seleccionada
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-
-            // Cargar contenido específico
-            if (tabName === 'results') {
-                loadResults();
-            }
-        }
-
-        // Funciones de auditoría
-        document.getElementById('auditForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            startAudit();
+      function addSingleChoiceQuestion() {
+        questionCount += 1;
+        const wrapper = document.createElement("div");
+        wrapper.className = "form-group";
+        const label = document.createElement("label");
+        label.textContent = `Pregunta ${questionCount}`;
+        wrapper.appendChild(label);
+        ["Opción 1", "Opción 2"].forEach((text, idx) => {
+          const optWrapper = document.createElement("div");
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.name = `q${questionCount}`;
+          input.id = `q${questionCount}-o${idx}`;
+          const optLabel = document.createElement("label");
+          optLabel.setAttribute("for", input.id);
+          optLabel.textContent = text;
+          optWrapper.append(input, optLabel);
+          wrapper.appendChild(optWrapper);
         });
+        formContainer.appendChild(wrapper);
+      }
 
-        function startAudit() {
-            const formData = new FormData(document.getElementById('auditForm'));
-            const auditData = {
-                id: ++auditCounter,
-                type: formData.get('auditType'),
-                company: formData.get('companyName'),
-                startDate: formData.get('auditStartDate'),
-                endDate: formData.get('auditEndDate'),
-                scope: formData.get('auditScope'),
-                auditor: formData.get('auditor'),
-                status: 'En Progreso',
-                createdAt: new Date().toISOString(),
-                progress: 0
-            };
-
-            currentAudits.push(auditData);
-            localStorage.setItem('audits', JSON.stringify(currentAudits));
-            localStorage.setItem('auditCounter', auditCounter.toString());
-
-            // Mostrar progreso
-            document.getElementById('auditProgress').classList.remove('hidden');
-            simulateAuditProgress(auditData.id);
-        }
-
-        function simulateAuditProgress(auditId) {
-            let progress = 0;
-            const progressFill = document.getElementById('progressFill');
-            const progressText = document.getElementById('progressText');
-
-            const steps = [
-                'Analizando documentos financieros...',
-                'Verificando controles internos...',
-                'Evaluando riesgos identificados...',
-                'Generando hallazgos...',
-                'Completando auditoría...'
-            ];
-
-            const interval = setInterval(() => {
-                progress += Math.random() * 20;
-                if (progress > 100) progress = 100;
-
-                progressFill.style.width = progress + '%';
-                const stepIndex = Math.floor((progress / 100) * steps.length);
-                if (stepIndex < steps.length) {
-                    progressText.textContent = steps[stepIndex];
-                }
-
-                if (progress >= 100) {
-                    clearInterval(interval);
-                    completeAudit(auditId);
-                }
-            }, 1000);
-        }
-
-        function completeAudit(auditId) {
-            // Actualizar el estado de la auditoría
-            const auditIndex = currentAudits.findIndex(a => a.id === auditId);
-            if (auditIndex !== -1) {
-                currentAudits[auditIndex].status = 'Completada';
-                currentAudits[auditIndex].progress = 100;
-                currentAudits[auditIndex].completedAt = new Date().toISOString();
-                
-                // Generar hallazgos de ejemplo
-                currentAudits[auditIndex].findings = generateSampleFindings();
-                
-                localStorage.setItem('audits', JSON.stringify(currentAudits));
-            }
-
-            document.getElementById('progressText').textContent = '¡Auditoría completada con éxito!';
-            
-            setTimeout(() => {
-                document.getElementById('auditProgress').classList.add('hidden');
-                document.getElementById('auditForm').reset();
-                alert('¡Auditoría completada! Puedes ver los resultados en la pestaña "Resultados".');
-            }, 2000);
-        }
-
-        function generateSampleFindings() {
-            const findings = [
-                {
-                    type: 'error',
-                    title: 'Control de acceso insuficiente',
-                    description: 'Se encontraron privilegios de usuario excesivos en el sistema contable.',
-                    recommendation: 'Implementar principio de menor privilegio.',
-                    severity: 'Alta'
-                },
-                {
-                    type: 'warning',
-                    title: 'Documentación incompleta',
-                    description: 'Faltan políticas actualizadas para el manejo de efectivo.',
-                    recommendation: 'Actualizar manual de procedimientos.',
-                    severity: 'Media'
-                },
-                {
-                    type: 'info',
-                    title: 'Proceso eficiente identificado',
-                    description: 'El proceso de reconciliación bancaria es robusto.',
-                    recommendation: 'Mantener el proceso actual.',
-                    severity: 'Baja'
-                }
-            ];
-            
-            return findings;
-        }
-
-        function loadResults() {
-            const container = document.getElementById('resultsContainer');
-            
-            if (currentAudits.length === 0) {
-                container.innerHTML = '<p>No hay auditorías completadas aún.</p>';
-                return;
-            }
-
-            let html = '';
-            currentAudits.forEach(audit => {
-                html += `
-                    <div class="audit-results">
-                        <h3>${audit.company} - ${audit.type}</h3>
-                        <p><strong>Estado:</strong> ${audit.status}</p>
-                        <p><strong>Auditor:</strong> ${audit.auditor}</p>
-                        <p><strong>Período:</strong> ${audit.startDate} al ${audit.endDate}</p>
-                        <p><strong>Fecha de creación:</strong> ${new Date(audit.createdAt).toLocaleDateString()}</p>
-                        
-                        ${audit.findings ? renderFindings(audit.findings) : ''}
-                        
-                        <button class="btn btn-secondary" onclick="downloadReport(${audit.id})">
-                            Descargar Reporte
-                        </button>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
-
-        function renderFindings(findings) {
-            let html = '<h4>Hallazgos:</h4>';
-            findings.forEach(finding => {
-                html += `
-                    <div class="result-item ${finding.type}">
-                        <h5>${finding.title}</h5>
-                        <p><strong>Descripción:</strong> ${finding.description}</p>
-                        <p><strong>Recomendación:</strong> ${finding.recommendation}</p>
-                        <p><strong>Severidad:</strong> ${finding.severity}</p>
-                    </div>
-                `;
-            });
-            return html;
-        }
-
-        function generateReport(type) {
-            alert(`Generando reporte ${type}... Esta funcionalidad estará disponible próximamente.`);
-        }
-
-        function downloadReport(auditId) {
-            const audit = currentAudits.find(a => a.id === auditId);
-            if (!audit) return;
-
-            const reportContent = `
-REPORTE DE AUDITORÍA
-====================
-
-Empresa: ${audit.company}
-Tipo de Auditoría: ${audit.type}
-Auditor: ${audit.auditor}
-Período: ${audit.startDate} al ${audit.endDate}
-Estado: ${audit.status}
-
-HALLAZGOS:
-${audit.findings ? audit.findings.map(f => `
-- ${f.title} (${f.severity})
-  Descripción: ${f.description}
-  Recomendación: ${f.recommendation}
-`).join('\n') : 'No hay hallazgos registrados.'}
-
-Generado el: ${new Date().toLocaleString()}
-            `;
-
-            const blob = new Blob([reportContent], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `reporte_auditoria_${audit.company}_${audit.id}.txt`;
-            a.click();
-            window.URL.revokeObjectURL(url);
-        }
-
-        function saveSettings() {
-            const settings = {
-                language: document.getElementById('language').value,
-                defaultAuditor: document.getElementById('defaultAuditor').value,
-                companyInfo: document.getElementById('companyInfo').value
-            };
-            
-            localStorage.setItem('settings', JSON.stringify(settings));
-            alert('Configuración guardada exitosamente.');
-        }
-
-        // Cargar configuración al iniciar
-        function loadSettings() {
-            const settings = JSON.parse(localStorage.getItem('settings') || '{}');
-            
-            if (settings.language) {
-                document.getElementById('language').value = settings.language;
-            }
-            if (settings.defaultAuditor) {
-                document.getElementById('defaultAuditor').value = settings.defaultAuditor;
-                document.getElementById('auditor').value = settings.defaultAuditor;
-            }
-            if (settings.companyInfo) {
-                document.getElementById('companyInfo').value = settings.companyInfo;
-            }
-        }
-
-        // Inicializar aplicación
-        document.addEventListener('DOMContentLoaded', function() {
-            loadSettings();
-            loadResults();
-        });
+      document
+        .getElementById("add-text")
+        .addEventListener("click", addTextQuestion);
+      document
+        .getElementById("add-single")
+        .addEventListener("click", addSingleChoiceQuestion);
     </script>
-</body>
+  </body>
 </html>
