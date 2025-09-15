@@ -1,58 +1,70 @@
-# FreeAuditor
+# FreeAuditor - Constructor de Formularios
 
-🔍 **Herramienta de Auditoría Gratuita** - Una aplicación web completa para realizar auditorías profesionales.
+FreeAuditor ha sido rediseñado para convertirse en una plataforma de creación de formularios reutilizables, similar a herramientas como SurveyMonkey. El objetivo es permitir que cualquier usuario diseñe, publique y analice formularios sin necesidad de escribir código.
 
-## Cómo usar la aplicación
+## Características principales
 
-### Opción 1: Abrir directamente (Recomendado)
-1. Descarga o clona este repositorio
-2. Abre el archivo `index.html` en tu navegador web
-3. ¡La aplicación estará lista para usar!
+- **Formularios reutilizables**: crea plantillas que pueden duplicarse para diferentes encuestas o procesos.
+- **Estructura jerárquica**: organiza preguntas en páginas o secciones para facilitar la navegación.
+- **Lógica condicional**: muestra u oculta preguntas según respuestas previas.
+- **Validaciones de entrada**: define campos obligatorios, formatos de correo, rangos numéricos y más.
+- **Diseño responsivo**: editor y formularios adaptados a móviles, tablet y escritorio.
 
-### Opción 2: Con servidor local
-```bash
-# Si tienes Python instalado
-python3 -m http.server 8000
-# Luego abre http://localhost:8000/index.html en tu navegador
-```
+## Editor Drag and Drop
 
-## Características
+El constructor ofrece una interfaz visual donde se arrastran los tipos de preguntas desde un panel lateral hacia el formulario.
+Cada elemento puede configurarse en sitio: texto, opciones de respuesta, obligatoriedad y reglas de visibilidad.
 
-### ✨ Funcionalidades principales:
-- **Nueva Auditoría**: Crea auditorías personalizadas con diferentes tipos (Financiera, Seguridad, Cumplimiento, Operacional, TI)
-- **Progreso en tiempo real**: Visualiza el progreso de las auditorías con barra de progreso animada
-- **Resultados detallados**: Ve los hallazgos organizados por severidad con colores distintivos
-- **Generación de reportes**: Descarga reportes en formato de texto
-- **Persistencia de datos**: Guarda las auditorías en el navegador (localStorage)
-- **Interfaz responsiva**: Funciona perfectamente en escritorio y móviles
+### Tipos de campos disponibles
 
-### 🎯 Tipos de auditoría disponibles:
-- Auditoría Financiera
-- Auditoría de Seguridad  
-- Auditoría de Cumplimiento
-- Auditoría Operacional
-- Auditoría de TI
+- Texto corto o largo
+- Selección única y múltiple
+- Sí/No (toggle)
+- Escalas de puntuación
+- Fecha y hora
+- Catálogos predefinidos (ej. países)
 
-### 📊 Características técnicas:
-- **Sin dependencias externas**: Todo funciona offline
-- **Diseño moderno**: Interfaz profesional con gradientes y animaciones
-- **Simulación realista**: Genera hallazgos de ejemplo automáticamente
-- **Exportación de datos**: Descarga reportes completos
-- **Configuración personalizable**: Guarda ajustes del usuario
+## Stack tecnológico recomendado
 
-## Navegación
+- **Frontend**: React con librerías para formularios (Formik o React Hook Form) y drag-and-drop (@dnd-kit o React Beautiful DnD).
+- **Backend**: NestJS en Node.js para APIs REST.
+- **Base de datos**: PostgreSQL con Prisma o TypeORM.
 
-La aplicación tiene 4 pestañas principales:
+## Modelo de datos (resumen)
 
-1. **Nueva Auditoría**: Crear y ejecutar nuevas auditorías
-2. **Resultados**: Ver auditorías completadas con hallazgos detallados
-3. **Reportes**: Generar diferentes tipos de reportes (próximamente)
-4. **Configuración**: Personalizar la aplicación según tus necesidades
+- **Formulario** → contiene secciones y respuestas.
+- **Sección** → agrupa preguntas.
+- **Pregunta** → define tipo, texto y validaciones.
+- **Opción** → valores predefinidos para preguntas de selección.
+- **RespuestaFormulario** → envío completo de un usuario.
+- **RespuestaPregunta** → valor individual a una pregunta.
 
-## Requisitos
+## APIs principales
 
-- Navegador web moderno (Chrome, Firefox, Safari, Edge)
-- JavaScript habilitado
-- No requiere conexión a internet (funciona offline)
+| Método | Endpoint                       | Descripción                                     |
+| ------ | ------------------------------ | ----------------------------------------------- |
+| GET    | `/formularios`                 | Listar formularios del usuario                  |
+| POST   | `/formularios`                 | Crear un formulario nuevo                       |
+| GET    | `/formularios/{id}`            | Obtener estructura completa                     |
+| PUT    | `/formularios/{id}`            | Actualizar título, secciones o preguntas        |
+| DELETE | `/formularios/{id}`            | Eliminar formulario                             |
+| POST   | `/formularios/{id}/respuestas` | Registrar respuestas de un formulario publicado |
+| GET    | `/formularios/{id}/respuestas` | Listar envíos recibidos                         |
 
-¡Disfruta usando FreeAuditor para tus necesidades de auditoría!
+## Flujo de uso
+
+1. El usuario crea un formulario en el editor visual.
+2. Publica el formulario y comparte el enlace generado.
+3. Los encuestados responden desde cualquier dispositivo.
+4. El autor revisa las respuestas y puede exportarlas a CSV.
+
+## Despliegue sugerido
+
+- Contenedores Docker para frontend y backend.
+- PostgreSQL administrado o en contenedor dedicado.
+- Servir el frontend estático mediante CDN y proteger la API con HTTPS.
+- Uso opcional de Redis para cachear estructuras de formularios.
+
+---
+
+Este repositorio contiene actualmente un prototipo estático (`index.html`) que permite agregar preguntas de texto, selección única y múltiple, además de eliminarlas. Las siguientes etapas del proyecto consistirán en implementar el editor, la API y el modelo de datos descritos.
